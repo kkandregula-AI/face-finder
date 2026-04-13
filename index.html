@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceFinder AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080c12;color:#dde2ec;font-family:'Syne',sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0e1420}::-webkit-scrollbar-thumb{background:#2a3550;border-radius:3px}
+.bg{min-height:100vh;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(246,164,28,.09) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(30,80,200,.08) 0%,transparent 60%),#080c12}
+.hdr{background:rgba(8,12,18,.95);border-bottom:1px solid rgba(246,164,28,.15);padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;backdrop-filter:blur(14px)}
+.hdr-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#f6a41c,#e8890a);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.hdr-t{font-size:17px;font-weight:800;color:#f2f5ff;letter-spacing:-.3px}.hdr-t span{color:#f6a41c}
+.hdr-s{font-size:11px;color:#3a5070;font-family:'DM Mono',monospace;margin-top:1px}
+.dots{margin-left:auto;display:flex;gap:5px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:#1a2236;border:1px solid #2a3550;transition:all .3s}
+.dot.on{background:#f6a41c;border-color:#f6a41c;box-shadow:0 0 8px rgba(246,164,28,.5)}
+.dot.done{background:#22c55e;border-color:#22c55e}
+.main{max-width:860px;margin:0 auto;padding:24px 14px 48px}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;inset:0;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.02) 0%,transparent 60%);pointer-events:none}
+.ctitle{font-size:15px;font-weight:700;color:#f2f5ff;margin-bottom:13px;display:flex;align-items:center;gap:9px}
+.badge{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#f6a41c,#e8890a);color:#080c12;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.drop{border:2px dashed rgba(246,164,28,.22);border-radius:12px;padding:30px 18px;text-align:center;cursor:pointer;background:rgba(246,164,28,.025);transition:all .2s}
+.drop:hover,.drop.over{border-color:rgba(246,164,28,.55);background:rgba(246,164,28,.07)}
+.drop.ok{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.04)}
+.di{font-size:34px;margin-bottom:10px;display:block}
+.dl{font-size:13px;color:#7080a0;margin-bottom:5px}.dh{font-size:11px;color:#2a3450;font-family:'DM Mono',monospace}
+.inp{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 13px;color:#dde2ec;font-size:13px;font-family:'DM Mono',monospace;outline:none;transition:border-color .2s}
+.inp:focus{border-color:rgba(246,164,28,.5)}.inp::placeholder{color:#222c42}
+.lbl{font-size:11px;color:#4a6080;font-family:'DM Mono',monospace;margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.5px}
+.ig{margin-bottom:13px}
+.btn{padding:10px 18px;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:13px;font-family:'Syne',sans-serif;transition:all .17s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-p{background:linear-gradient(135deg,#f6a41c,#e8890a);color:#080c12;box-shadow:0 4px 14px rgba(246,164,28,.25)}
+.btn-p:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 20px rgba(246,164,28,.4)}
+.btn-g{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}
+.btn-g:hover:not(:disabled){transform:translateY(-1px)}
+.btn-b{background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff}
+.btn-r{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff}
+.btn-o{background:transparent;border:1px solid rgba(246,164,28,.3);color:#f6a41c}
+.btn-o:hover:not(:disabled){background:rgba(246,164,28,.08)}
+.btn-gh{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);color:#7080a0}
+.btn-gh:hover{background:rgba(255,255,255,.09);color:#dde2ec}
+.bfw{width:100%}.brow{display:flex;gap:9px;flex-wrap:wrap}.brow .btn{flex:1;min-width:120px}
+.mtabs{display:flex;gap:9px;margin-bottom:20px}
+.mtab{flex:1;padding:13px 10px;border-radius:11px;border:1.5px solid rgba(255,255,255,.07);background:transparent;color:#3a4a68;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;font-size:12px;transition:all .2s;text-align:center}
+.mtab:hover{border-color:rgba(246,164,28,.3);color:#7080a0}
+.mtab.sel{border-color:rgba(246,164,28,.5);background:rgba(246,164,28,.08);color:#f6a41c}
+.mtab .ti{font-size:20px;display:block;margin-bottom:4px}
+.pt{height:5px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,#f6a41c,#22c55e);border-radius:99px;transition:width .35s ease;width:0}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:9px}
+.pc{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;overflow:hidden;transition:all .2s}
+.pc:hover{border-color:rgba(246,164,28,.3);transform:translateY(-2px)}
+.pc.match{border-color:rgba(34,197,94,.45);box-shadow:0 0 14px rgba(34,197,94,.1)}
+.pc.review{border-color:rgba(234,179,8,.3)}
+.pt2{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#0d1320}
+.pi{padding:7px}
+.pn{font-size:10px;color:#3a5070;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px}
+.pa{display:flex;gap:3px}
+.pb{flex:1;padding:4px 0;font-size:11px;font-family:'Syne',sans-serif;font-weight:600;border:none;border-radius:5px;cursor:pointer;transition:opacity .14s}
+.pb:hover{opacity:.75}
+.pb-s{background:rgba(246,164,28,.15);color:#f6a41c}
+.pb-y{background:rgba(34,197,94,.2);color:#4ade80}
+.pb-n{background:rgba(220,38,38,.2);color:#f87171}
+.sbox{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:11px;padding:13px;text-align:center}
+.snum{font-size:26px;font-weight:800;line-height:1;margin-bottom:3px}
+.slbl{font-size:9px;color:#3a5070;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.al{border-radius:9px;padding:11px 14px;font-size:13px;margin-bottom:13px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
+.al-e{background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.22);color:#fca5a5}
+.al-s{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);color:#86efac}
+.al-i{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.18);color:#93c5fd}
+.al-w{background:rgba(246,164,28,.08);border:1px solid rgba(246,164,28,.2);color:#fcd34d}
+.al-x{background:none;border:none;cursor:pointer;font-size:15px;margin-left:auto;color:inherit;opacity:.7;flex-shrink:0}
+.rbar{display:flex;align-items:center;gap:12px;padding:13px 16px;background:rgba(246,164,28,.06);border:1px solid rgba(246,164,28,.14);border-radius:13px;margin-bottom:14px}
+.rav{width:44px;height:44px;border-radius:9px;object-fit:cover;border:2px solid rgba(246,164,28,.4);flex-shrink:0}
+.seclbl{font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:#2a3a58;margin-bottom:11px;display:flex;align-items:center;gap:7px}
+.seclbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.045)}
+.div{height:1px;background:rgba(255,255,255,.045);margin:16px 0}
+.ir{font-size:11px;color:#2a3a58;font-family:'DM Mono',monospace;margin-top:7px;line-height:1.5}
+.dn{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.13);border-radius:9px;padding:11px 13px;font-size:12px;color:#5a80a0;font-family:'DM Mono',monospace;line-height:1.6;margin-bottom:13px}
+.dn a{color:#7ab0e0}
+.hidden{display:none!important}
+.sanim{display:flex;justify-content:center;align-items:center;padding:26px 0 16px;gap:7px}
+.sdot{width:8px;height:8px;border-radius:50%;background:#f6a41c;animation:pp 1.4s ease-in-out infinite}
+.sdot:nth-child(2){animation-delay:.2s}.sdot:nth-child(3){animation-delay:.4s}
+@keyframes pp{0%,80%,100%{transform:scale(.55);opacity:.3}40%{transform:scale(1);opacity:1}}
+.lgrid{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}
+.lt{width:52px;height:52px;object-fit:cover;border-radius:7px;border:2px solid #22c55e;animation:fi .35s ease}
+@keyframes fi{from{opacity:0;transform:scale(.75)}to{opacity:1;transform:scale(1)}}
+.est{text-align:center;padding:44px 18px}
+.ei{font-size:48px;display:block;margin-bottom:14px}
+.et{font-size:17px;font-weight:700;color:#2a3a58;margin-bottom:7px}
+.es{font-size:13px;color:#1e2a40;line-height:1.6}
+/* API KEY */
+.akbox{background:rgba(246,164,28,.04);border:1px solid rgba(246,164,28,.18);border-radius:13px;padding:16px;margin-bottom:14px}
+.akrow{display:flex;gap:9px;align-items:flex-end}
+.akrow .ig{flex:1;margin-bottom:0}
+.akst{font-size:11px;font-family:'DM Mono',monospace;margin-top:7px;color:#3a5070}
+.akst.ok{color:#4ade80}.akst.err{color:#f87171}
+/* REF GRID */
+.refgrid{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.refthumb{width:72px;height:72px;object-fit:cover;border-radius:9px;border:2px solid rgba(246,164,28,.4);cursor:pointer;transition:all .2s;position:relative}
+.refthumb:hover{border-color:#f6a41c;transform:scale(1.05)}
+.refthumb-wrap{position:relative;display:inline-block}
+.refthumb-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#dc2626;border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.add-ref{width:72px;height:72px;border-radius:9px;border:2px dashed rgba(246,164,28,.25);background:rgba(246,164,28,.03);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;color:#f6a41c;transition:all .2s}
+.add-ref:hover{border-color:rgba(246,164,28,.5);background:rgba(246,164,28,.07)}
+/* DEBUG */
+.dbox{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.04);border-radius:9px;padding:11px;margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;max-height:190px;overflow-y:auto}
+.dl2{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.025)}
+.dl-y{color:#4ade80}.dl-m{color:#fbbf24}.dl-n{color:#3a5070}.dl-e{color:#f87171}
+/* SENS */
+.sr{display:flex;align-items:center;gap:11px;margin-bottom:15px}
+.sr input[type=range]{flex:1;accent-color:#f6a41c}
+.sl{font-size:11px;color:#3a5070;font-family:'DM Mono',monospace;white-space:nowrap}
+.sv{font-size:12px;font-weight:700;color:#f6a41c;font-family:'DM Mono',monospace;min-width:52px;text-align:right}
+/* MODEL BADGE */
+.mbadge{background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.25);border-radius:6px;padding:3px 9px;font-size:10px;font-family:'DM Mono',monospace;color:#a5b4fc;margin-left:auto}
+</style>
+</head>
+<body>
+<div class="bg">
+
+<header class="hdr">
+  <div class="hdr-icon">🔍</div>
+  <div>
+    <div class="hdr-t">Face<span>Finder</span> AI</div>
+    <div class="hdr-s">Powered by Claude Vision</div>
+  </div>
+  <div class="dots">
+    <div class="dot on" id="d1"></div><div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div><div class="dot" id="d4"></div>
+  </div>
+</header>
+
+<main class="main">
+  <div id="alertBox" class="al al-e hidden"><span id="alertMsg" style="flex:1"></span><button class="al-x" onclick="hideAlert()">×</button></div>
+
+  <!-- API KEY -->
+  <div class="akbox">
+    <div class="ctitle" style="margin-bottom:9px;font-size:13px">🔑 Anthropic API Key <span class="mbadge">claude-sonnet-4-5</span></div>
+    <div class="akrow">
+      <div class="ig">
+        <label class="lbl">Your API key (sk-ant-…)</label>
+        <input class="inp" id="apiK" type="password" placeholder="sk-ant-api03-..." autocomplete="off" oninput="onKC()"/>
+      </div>
+      <button class="btn btn-p" onclick="testK()" id="testBtn" style="padding:9px 14px;font-size:12px;white-space:nowrap">Test</button>
+    </div>
+    <div class="akst" id="kSt">Not set — required to scan photos</div>
+    <div class="ir">🔒 Stays in browser only · Get a free key at <a href="https://console.anthropic.com/keys" target="_blank" style="color:#f6a41c">console.anthropic.com/keys</a></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div id="step1" class="card">
+    <div class="ctitle"><span class="badge">1</span> Upload Reference Photos of the Person</div>
+    <p style="font-size:13px;color:#4a6080;margin-bottom:16px;line-height:1.6">
+      Upload <strong style="color:#f6a41c">1–5 clear photos</strong> of the person from different angles, lighting, or years.
+      More references = much better accuracy.
+    </p>
+
+    <div class="drop" id="refDrop" onclick="document.getElementById('refInp').click()">
+      <span class="di">👤</span>
+      <div class="dl">Drop reference photo(s) here, or click to browse</div>
+      <div class="dh">Add up to 5 photos of the same person for best results</div>
+    </div>
+    <input type="file" id="refInp" accept="image/*" multiple class="hidden"/>
+
+    <div class="refgrid" id="refGrid"></div>
+
+    <button class="btn btn-p bfw hidden" id="step1Btn" style="margin-top:14px;padding:12px;font-size:14px">
+      Continue →
+    </button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step2" class="hidden">
+    <div class="rbar">
+      <div id="refThumbs" style="display:flex;gap:6px"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#dde2ec">Searching for this person</div>
+        <div id="refCountLbl" style="font-size:11px;color:#3a5070;font-family:'DM Mono',monospace;margin-top:2px"></div>
+      </div>
+      <button class="btn btn-gh" style="font-size:11px;padding:5px 11px" onclick="goStep(1)">Change</button>
+    </div>
+
+    <div class="card">
+      <div class="ctitle"><span class="badge">2</span> Choose Photo Source</div>
+
+      <!-- Sensitivity -->
+      <div style="margin-bottom:16px">
+        <div class="lbl" style="margin-bottom:7px">Match Sensitivity — default is Loose to catch more matches</div>
+        <div class="sr">
+          <span class="sl">Strict</span>
+          <input type="range" id="sens" min="1" max="3" value="3" oninput="document.getElementById('sensV').textContent=['Strict','Balanced','Loose'][+this.value-1]"/>
+          <span class="sl">Loose</span>
+          <span class="sv" id="sensV">Loose</span>
+        </div>
+        <div class="ir">⚠ If photos are being missed, use Loose. You can manually dismiss false positives afterwards.</div>
+      </div>
+
+      <div class="mtabs">
+        <button class="mtab sel" id="tabL" onclick="setMode('local')"><span class="ti">📁</span>Local Folder</button>
+        <button class="mtab" id="tabD" onclick="setMode('drive')"><span class="ti">☁️</span>Google Drive</button>
+      </div>
+
+      <div id="localSrc">
+        <div class="drop" id="fDrop" onclick="document.getElementById('fInp').click()">
+          <span class="di">📁</span>
+          <div class="dl">Select folder or drag photos here</div>
+          <div class="dh">Click to open folder picker</div>
+        </div>
+        <input type="file" id="fInp" accept="image/*" multiple webkitdirectory class="hidden"/>
+        <div class="ir">💡 Click → navigate to your photos folder → select all files.</div>
+      </div>
+
+      <div id="driveSrc" class="hidden">
+        <div class="dn">Requires a <strong>public</strong> Google Drive folder + API key.<br/>
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a> → Create credentials → API Key → Enable Drive API</div>
+        <div class="ig"><label class="lbl">Drive Folder URL or ID</label><input class="inp" id="dUrl" placeholder="https://drive.google.com/drive/folders/1AbCd..."/></div>
+        <div class="ig"><label class="lbl">Google Drive API Key</label><input class="inp" id="dKey" type="password" placeholder="AIzaSy..." autocomplete="off"/></div>
+        <button class="btn btn-b" id="ldBtn" onclick="loadDrive()">☁️ Load Drive Photos</button>
+        <div id="dSt" style="margin-top:11px;display:none"></div>
+      </div>
+
+      <div class="div"></div>
+      <button class="btn btn-p bfw hidden" id="scanBtn" onclick="startScan()" style="padding:13px;font-size:14px">
+        🔍 Scan <span id="scanCnt">0</span> Photos with AI
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="step3" class="card hidden">
+    <div id="sTitle" style="font-size:16px;font-weight:700;color:#f2f5ff;text-align:center;margin-bottom:3px">Scanning with AI…</div>
+    <div id="sSub" style="text-align:center;font-size:12px;color:#3a5070;font-family:'DM Mono',monospace;margin-bottom:18px"></div>
+    <div class="sanim" id="sanim"><div class="sdot"></div><div class="sdot"></div><div class="sdot"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#3a5070;font-family:'DM Mono',monospace;margin-bottom:7px">
+      <span id="pTxt">0 / 0 (0%)</span><span id="mTxt" style="color:#4ade80">0 matches</span>
+    </div>
+    <div class="pt"><div class="pf" id="pFill"></div></div>
+    <div id="lgrid" class="lgrid"></div>
+    <div style="margin-top:14px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+        <span style="font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:#2a3a58">AI Decision Log</span>
+        <button class="btn btn-gh" onclick="toggleLog()" id="logBtn" style="font-size:10px;padding:3px 10px">Show</button>
+      </div>
+      <div class="dbox hidden" id="logBox"></div>
+    </div>
+    <div class="brow" style="margin-top:18px">
+      <button class="btn btn-r" id="stopBtn" onclick="stopScan()">⏹ Stop</button>
+      <button class="btn btn-p hidden" id="toRes" onclick="goStep(4)">View Results →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div id="step4" class="hidden">
+    <div class="card">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">
+        <div class="sbox"><div class="snum" id="sM" style="color:#4ade80">0</div><div class="slbl">Confirmed</div></div>
+        <div class="sbox"><div class="snum" id="sR" style="color:#fbbf24">0</div><div class="slbl">Review</div></div>
+        <div class="sbox"><div class="snum" id="sN" style="color:#f87171">0</div><div class="slbl">No Match</div></div>
+        <div class="sbox"><div class="snum" id="sT" style="color:#64748b">0</div><div class="slbl">Scanned</div></div>
+      </div>
+    </div>
+
+    <div class="card" id="saveBar" style="display:none;padding:14px 18px">
+      <div class="seclbl" style="margin-bottom:11px">Save matched photos</div>
+      <div class="brow">
+        <button class="btn btn-g" onclick="saveFolder()">💾 Save to Folder</button>
+        <button class="btn btn-p" id="zipBtn" onclick="dlZip(false)">📦 Download ZIP</button>
+        <button class="btn btn-o" id="zipAllBtn" onclick="dlZip(true)" style="display:none">📦 ZIP + Review</button>
+      </div>
+      <div class="ir" style="margin-top:9px">💡 "Save to Folder" writes directly to a folder you pick (Chrome/Edge). ZIP works everywhere.</div>
+    </div>
+
+    <div class="card" id="mCard" style="display:none">
+      <div class="seclbl" id="mLbl" style="color:#4ade80"></div>
+      <div class="pgrid" id="mGrid"></div>
+    </div>
+
+    <div class="card" id="rCard" style="display:none">
+      <div class="seclbl" id="rLbl" style="color:#fbbf24"></div>
+      <p style="font-size:12px;color:#3a5070;margin-bottom:13px;font-family:'DM Mono',monospace">AI wasn't fully confident. Tap ✓ to keep or ✕ to dismiss.</p>
+      <div class="pgrid" id="rGrid"></div>
+    </div>
+
+    <div class="card" id="emCard" style="display:none">
+      <div class="est">
+        <span class="ei">🔍</span>
+        <div class="et">No matches found</div>
+        <div class="es">Try uploading multiple reference photos from different angles. Set sensitivity to Loose. Check the AI Decision Log (step 3) to see what the AI is deciding for each photo.</div>
+      </div>
+    </div>
+
+    <button class="btn btn-gh bfw" onclick="resetApp()" style="margin-top:4px">🔄 New Search</button>
+  </div>
+</main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+const S={
+  step:1, refs:[], // [{dataURL, b64}] - multiple reference photos
+  mode:'local', localFiles:[], driveFiles:[], dKey:'',
+  matches:[], review:[], noCount:0, total:0, stopped:false, apiKey:''
+};
+
+/* ═══════════════════════════════════════════
+   API KEY
+═══════════════════════════════════════════ */
+function onKC(){
+  S.apiKey=document.getElementById('apiK').value.trim();
+  const el=document.getElementById('kSt');
+  if(!S.apiKey){el.className='akst';el.textContent='Not set — required to scan photos';return;}
+  if(!S.apiKey.startsWith('sk-ant-')){el.className='akst err';el.textContent='⚠ Key should start with sk-ant-…';return;}
+  el.className='akst ok';el.textContent='✓ API key saved';
+}
+async function testK(){
+  S.apiKey=document.getElementById('apiK').value.trim();
+  if(!S.apiKey){sa('Enter an API key first.');return;}
+  const b=document.getElementById('testBtn');b.disabled=true;b.textContent='Testing…';
+  try{
+    await callClaude([{role:'user',content:'Say OK'}],'claude-haiku-4-5-20251001',5);
+    document.getElementById('kSt').className='akst ok';
+    document.getElementById('kSt').textContent='✅ API key valid — ready to scan!';
+  }catch(e){
+    document.getElementById('kSt').className='akst err';
+    document.getElementById('kSt').textContent='❌ '+e.message;
+  }
+  b.disabled=false;b.textContent='Test';
+}
+
+/* ═══════════════════════════════════════════
+   ALERTS
+═══════════════════════════════════════════ */
+function sa(msg,type='e'){const b=document.getElementById('alertBox');b.className='al al-'+type;document.getElementById('alertMsg').textContent=msg;b.classList.remove('hidden');}
+function hideAlert(){document.getElementById('alertBox').classList.add('hidden');}
+
+/* ═══════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════ */
+const f2d=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=e=>ok(e.target.result);r.onerror=no;r.readAsDataURL(f)});
+
+function resize(dataURL,mx=800){
+  return new Promise(ok=>{
+    const img=new Image();
+    img.onload=()=>{
+      const sc=Math.min(mx/img.width,mx/img.height,1);
+      const w=Math.round(img.width*sc),h=Math.round(img.height*sc);
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      ok(c.toDataURL('image/jpeg',0.88));
+    };
+    img.onerror=()=>ok(dataURL);
+    img.src=dataURL;
+  });
+}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const fid=u=>{const m=u.match(/folders\/([a-zA-Z0-9_-]+)/);return m?m[1]:u.trim()};
+
+/* ═══════════════════════════════════════════
+   CLAUDE API
+═══════════════════════════════════════════ */
+async function callClaude(messages,model='claude-haiku-4-5-20251001',max_tokens=150){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':S.apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({model,max_tokens,messages})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+r.status);}
+  const d=await r.json();
+  return (d.content?.[0]?.text||'').trim();
+}
+
+/* ═══════════════════════════════════════════
+   FACE COMPARISON — MULTI-REFERENCE + BETTER PROMPT
+═══════════════════════════════════════════ */
+function buildPrompt(numRefs){
+  const sv=parseInt(document.getElementById('sens').value);
+
+  // Build reference description block
+  const refDesc=numRefs===1
+    ? 'Image 1 is a reference photo of the person we are looking for.'
+    : `Images 1–${numRefs} are ALL reference photos of the SAME person we are looking for (different angles/lighting/dates). Use ALL of them together to understand what this person looks like.`;
+
+  const candDesc=`Image ${numRefs+1} is a candidate photo from the user's collection.`;
+
+  const task=`Your task: Does the person from the reference photo(s) appear anywhere in the candidate photo?
+The person may appear: alone, in a group, partially visible, at a different age, different hairstyle, different lighting, different angle, wearing glasses or not, or years apart from the reference.
+Focus on permanent facial features: bone structure, eye shape/spacing, nose shape, jawline, skin tone.`;
+
+  let instruction='';
+  if(sv===1){
+    instruction=`Be precise. Only answer YES if you are highly confident (>85%) it's the same person. Otherwise answer NO.
+If the face is not clearly visible or too small, answer NO.
+Respond with ONLY valid JSON (no markdown, no explanation):
+{"answer":"YES","reason":"specific facial features that match"} or {"answer":"NO","reason":"why not"}`;
+  } else if(sv===2){
+    instruction=`Be balanced. Answer YES if you think it's likely (>60%) the same person, MAYBE if you're unsure (40-60%), NO only if clearly a different person.
+Respond with ONLY valid JSON (no markdown, no explanation):
+{"answer":"YES","reason":"..."} or {"answer":"MAYBE","reason":"..."} or {"answer":"NO","reason":"..."}`;
+  } else {
+    // LOOSE — the default, catches the most
+    instruction=`Be inclusive and err on the side of inclusion.
+- Answer YES if you think it's likely or moderately likely the same person.
+- Answer MAYBE if there's any reasonable chance it could be the same person (face partially visible, angle, lighting issues, etc.).
+- Only answer NO if you are quite confident (>80%) this is clearly a DIFFERENT person (obviously different gender, very different ethnicity, completely different facial structure).
+When in doubt between MAYBE and NO, always choose MAYBE — the user can verify manually.
+Respond with ONLY valid JSON (no markdown, no explanation):
+{"answer":"YES","reason":"..."} or {"answer":"MAYBE","reason":"..."} or {"answer":"NO","reason":"..."}`;
+  }
+
+  return `${refDesc}\n${candDesc}\n\n${task}\n\n${instruction}`;
+}
+
+async function compareFaces(candB64){
+  const numRefs=S.refs.length;
+  const prompt=buildPrompt(numRefs);
+
+  // Build content array: prompt text + all reference images + candidate image
+  const content=[{type:'text',text:prompt}];
+  for(const ref of S.refs){
+    content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:ref.b64}});
+  }
+  content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:candB64}});
+
+  // Use Sonnet for much better vision accuracy
+  const raw=await callClaude(
+    [{role:'user',content}],
+    'claude-sonnet-4-5',  // ← Sonnet: far better at face comparison than Haiku
+    160
+  );
+
+  // Parse JSON robustly
+  let answer='NO',reason='';
+  try{
+    const jm=raw.replace(/```json|```/gi,'').trim().match(/\{[\s\S]*\}/);
+    if(jm){
+      const p=JSON.parse(jm[0]);
+      answer=(p.answer||'NO').toUpperCase();
+      reason=p.reason||'';
+    } else {
+      const up=raw.toUpperCase();
+      if(/"ANSWER"\s*:\s*"YES"/.test(raw)||up.match(/\bYES\b/)) answer='YES';
+      else if(/"ANSWER"\s*:\s*"MAYBE"/.test(raw)||up.match(/\bMAYBE\b/)) answer='MAYBE';
+      else answer='NO';
+      reason=raw.substring(0,80);
+    }
+  }catch{
+    const up=raw.toUpperCase();
+    if(up.includes('YES')) answer='YES';
+    else if(up.includes('MAYBE')) answer='MAYBE';
+    else answer='NO';
+    reason=raw.substring(0,80);
+  }
+  return{answer,reason,raw};
+}
+
+/* ═══════════════════════════════════════════
+   DEBUG LOG
+═══════════════════════════════════════════ */
+let logVisible=false;
+function toggleLog(){
+  logVisible=!logVisible;
+  document.getElementById('logBox').classList.toggle('hidden',!logVisible);
+  document.getElementById('logBtn').textContent=logVisible?'Hide':'Show';
+}
+function addLog(name,answer,reason){
+  const box=document.getElementById('logBox');
+  const cls=answer==='YES'?'dl-y':answer==='MAYBE'?'dl-m':answer==='ERROR'?'dl-e':'dl-n';
+  const icon=answer==='YES'?'✅':answer==='MAYBE'?'⚠️':answer==='ERROR'?'❌':'—';
+  const d=document.createElement('div');
+  d.className='dl2 '+cls;
+  d.textContent=`${icon} ${name}: ${reason||answer}`;
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
+}
+
+/* ═══════════════════════════════════════════
+   STEP NAV
+═══════════════════════════════════════════ */
+function goStep(n){
+  S.step=n;
+  ['step1','step2','step3','step4'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden',i+1!==n));
+  for(let i=1;i<=4;i++){const d=document.getElementById('d'+i);d.className='dot'+(i<n?' done':i===n?' on':'');}
+  hideAlert();
+}
+
+/* ═══════════════════════════════════════════
+   STEP 1 — MULTIPLE REFERENCE PHOTOS
+═══════════════════════════════════════════ */
+const refInp=document.getElementById('refInp');
+const refDrop=document.getElementById('refDrop');
+refInp.addEventListener('change',e=>addRefs(e.target.files));
+refDrop.addEventListener('dragover',e=>{e.preventDefault();refDrop.classList.add('over')});
+refDrop.addEventListener('dragleave',()=>refDrop.classList.remove('over'));
+refDrop.addEventListener('drop',e=>{e.preventDefault();refDrop.classList.remove('over');addRefs(e.dataTransfer.files)});
+
+async function addRefs(files){
+  const imgs=[...files].filter(f=>f.type.startsWith('image/')).slice(0,5-S.refs.length);
+  for(const file of imgs){
+    const dataURL=await f2d(file);
+    const resized=await resize(dataURL,900);
+    S.refs.push({dataURL,b64:resized.split(',')[1],name:file.name});
+  }
+  renderRefGrid();
+}
+
+function renderRefGrid(){
+  const grid=document.getElementById('refGrid');
+  grid.innerHTML='';
+
+  S.refs.forEach((ref,i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='refthumb-wrap';
+    wrap.innerHTML=`<img src="${ref.dataURL}" class="refthumb" title="${esc(ref.name)}"/><button class="refthumb-del" onclick="removeRef(${i})">×</button>`;
+    grid.appendChild(wrap);
+  });
+
+  if(S.refs.length<5){
+    const add=document.createElement('div');
+    add.className='add-ref'; add.textContent='+';
+    add.title='Add another reference photo';
+    add.onclick=()=>document.getElementById('refInp').click();
+    grid.appendChild(add);
+  }
+
+  // Update drop zone appearance
+  if(S.refs.length>0){
+    refDrop.className='drop ok';
+    refDrop.innerHTML=`<span class="di">✅</span><div class="dl" style="color:#4ade80;font-weight:700">${S.refs.length} reference photo${S.refs.length>1?'s':''} added</div><div class="dh">Click + below to add more (up to 5 total)</div>`;
+    const btn=document.getElementById('step1Btn');
+    btn.classList.remove('hidden');btn.style.display='';
+  }
+}
+
+function removeRef(i){
+  S.refs.splice(i,1);
+  if(S.refs.length===0){
+    refDrop.className='drop';
+    refDrop.innerHTML='<span class="di">👤</span><div class="dl">Drop reference photo(s) here, or click to browse</div><div class="dh">Add up to 5 photos of the same person for best results</div>';
+    document.getElementById('step1Btn').classList.add('hidden');
+  }
+  renderRefGrid();
+}
+
+document.getElementById('step1Btn').onclick=()=>{
+  // Build ref bar
+  const rt=document.getElementById('refThumbs');
+  rt.innerHTML=S.refs.slice(0,3).map(r=>`<img src="${r.dataURL}" class="rav" style="width:38px;height:38px">`).join('');
+  document.getElementById('refCountLbl').textContent=`${S.refs.length} reference photo${S.refs.length>1?'s':(':')} ${S.refs[0].name}`;
+  goStep(2);
+};
+
+/* ═══════════════════════════════════════════
+   STEP 2
+═══════════════════════════════════════════ */
+function setMode(m){
+  S.mode=m;
+  document.getElementById('tabL').className='mtab'+(m==='local'?' sel':'');
+  document.getElementById('tabD').className='mtab'+(m==='drive'?' sel':'');
+  document.getElementById('localSrc').style.display=m==='local'?'':'none';
+  document.getElementById('driveSrc').style.display=m==='drive'?'':'none';
+  refreshScanBtn();
+}
+
+const fInp=document.getElementById('fInp');
+const fDrop=document.getElementById('fDrop');
+fInp.addEventListener('change',e=>loadFolder(e.target.files));
+fDrop.addEventListener('dragover',e=>{e.preventDefault();fDrop.classList.add('over')});
+fDrop.addEventListener('dragleave',()=>fDrop.classList.remove('over'));
+fDrop.addEventListener('drop',e=>{e.preventDefault();fDrop.classList.remove('over');loadFolder(e.dataTransfer.files)});
+
+function loadFolder(fl){
+  const imgs=[...fl].filter(f=>f.type.startsWith('image/'));
+  if(!imgs.length){sa('No images found.');return;}
+  S.localFiles=imgs;
+  fDrop.className='drop ok';
+  fDrop.innerHTML=`<span class="di">📂</span><div style="color:#4ade80;font-weight:700;font-size:15px">${imgs.length} photos ready</div><div class="dh" style="margin-top:5px">Click to change</div>`;
+  refreshScanBtn();hideAlert();
+}
+
+async function loadDrive(){
+  const fi=fid(document.getElementById('dUrl').value.trim());
+  const k=document.getElementById('dKey').value.trim();
+  if(!fi){sa('Enter a Drive folder URL or ID.');return;}
+  if(!k){sa('Enter a Google Drive API key.');return;}
+  S.dKey=k;
+  const b=document.getElementById('ldBtn');b.textContent='⏳ Loading…';b.disabled=true;
+  try{
+    const q=encodeURIComponent(`'${fi}' in parents and mimeType contains 'image/'`);
+    const r=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&key=${k}&fields=files(id,name,mimeType)&pageSize=1000`);
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'Drive error '+r.status);}
+    const d=await r.json();
+    if(!d.files?.length) throw new Error('No images found — folder must be public.');
+    S.driveFiles=d.files;
+    const ds=document.getElementById('dSt');ds.className='al al-s';ds.style.display='';
+    ds.textContent=`✅ Found ${d.files.length} photos in Drive folder.`;
+    refreshScanBtn();hideAlert();
+  }catch(e){sa('Google Drive: '+e.message);}
+  finally{b.textContent='☁️ Load Drive Photos';b.disabled=false;}
+}
+
+function refreshScanBtn(){
+  const n=S.mode==='local'?S.localFiles.length:S.driveFiles.length;
+  document.getElementById('scanCnt').textContent=n;
+  const b=document.getElementById('scanBtn');
+  if(n>0){b.classList.remove('hidden');b.style.display='';}
+  else b.classList.add('hidden');
+}
+
+/* ═══════════════════════════════════════════
+   STEP 3 — SCAN
+═══════════════════════════════════════════ */
+let done=0,total=0;
+
+function upd(){
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('pFill').style.width=pct+'%';
+  document.getElementById('pTxt').textContent=`${done} / ${total} (${pct}%)`;
+  document.getElementById('mTxt').textContent=`${S.matches.length} match${S.matches.length!==1?'es':''}`;
+}
+
+async function fetchDriveFile(f){
+  const r=await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${S.dKey}`);
+  if(!r.ok) throw new Error('Cannot fetch '+f.name);
+  return f2d(await r.blob());
+}
+
+async function startScan(){
+  if(!S.apiKey){sa('Enter your Anthropic API key at the top first.');return;}
+  if(!S.refs.length){sa('Upload at least one reference photo first.');return;}
+  const list=S.mode==='local'?S.localFiles:S.driveFiles;
+  if(!list.length) return;
+
+  S.stopped=false;S.matches=[];S.review=[];S.noCount=0;S.total=0;
+  done=0;total=list.length;
+  document.getElementById('logBox').innerHTML='';
+
+  goStep(3);
+  document.getElementById('sTitle').textContent='Scanning with AI…';
+  document.getElementById('sSub').textContent=`Using ${S.refs.length} reference photo${S.refs.length>1?'s':''} · claude-sonnet-4-5`;
+  document.getElementById('lgrid').innerHTML='';
+  document.getElementById('sanim').style.display='flex';
+  document.getElementById('stopBtn').classList.remove('hidden');document.getElementById('stopBtn').style.display='';
+  document.getElementById('toRes').classList.add('hidden');
+  upd();
+
+  for(let i=0;i<list.length&&!S.stopped;i++){
+    const photo=list[i];
+    const name=photo instanceof File?photo.name:photo.name;
+    document.getElementById('sSub').textContent=`(${i+1}/${list.length}) ${name}`;
+    try{
+      let dataURL=photo instanceof File?await f2d(photo):await fetchDriveFile(photo);
+      const resized=await resize(dataURL,800);
+      const candB64=resized.split(',')[1];
+      const{answer,reason}=await compareFaces(candB64);
+      addLog(name,answer,reason);
+      if(answer==='YES'){
+        S.matches.push({name,dataURL});
+        const img=document.createElement('img');
+        img.src=dataURL;img.className='lt';img.title=name;
+        document.getElementById('lgrid').appendChild(img);
+      }else if(answer==='MAYBE'){
+        S.review.push({name,dataURL});
+      }else{
+        S.noCount++;
+      }
+    }catch(e){
+      addLog(name,'ERROR',e.message);
+      if(/401|403|api key/i.test(e.message)){sa('API error: '+e.message);S.stopped=true;}
+    }
+    done++;S.total=done;upd();
+    await new Promise(r=>setTimeout(r,200));
+  }
+
+  document.getElementById('sTitle').textContent=S.stopped?'Scan stopped.':'Scan complete!';
+  document.getElementById('sSub').textContent=`✅ ${S.matches.length} confirmed · ⚠️ ${S.review.length} for review`;
+  document.getElementById('sanim').style.display='none';
+  document.getElementById('stopBtn').classList.add('hidden');
+  document.getElementById('toRes').classList.remove('hidden');document.getElementById('toRes').style.display='';
+  renderResults();
+}
+
+function stopScan(){S.stopped=true;}
+
+/* ═══════════════════════════════════════════
+   STEP 4 — RESULTS
+═══════════════════════════════════════════ */
+function renderResults(){
+  document.getElementById('sM').textContent=S.matches.length;
+  document.getElementById('sR').textContent=S.review.length;
+  document.getElementById('sN').textContent=S.noCount;
+  document.getElementById('sT').textContent=S.total;
+  document.getElementById('saveBar').style.display=S.matches.length>0?'block':'none';
+  document.getElementById('zipAllBtn').style.display=S.review.length>0?'':'none';
+
+  if(S.matches.length>0){
+    document.getElementById('mCard').style.display='block';
+    document.getElementById('mLbl').textContent=`✅ Confirmed — ${S.matches.length} photo${S.matches.length!==1?'s':''}`;
+    document.getElementById('mGrid').innerHTML=S.matches.map((p,i)=>`
+      <div class="pc match">
+        <img class="pt2" src="${p.dataURL}" alt="${esc(p.name)}"/>
+        <div class="pi"><div class="pn" title="${esc(p.name)}">${esc(p.name)}</div>
+        <div class="pa"><button class="pb pb-s" onclick="dlOne(${i},'m')">↓ Save</button></div></div>
+      </div>`).join('');
+  } else document.getElementById('mCard').style.display='none';
+
+  renderReview();
+  document.getElementById('emCard').style.display=(!S.matches.length&&!S.review.length)?'block':'none';
+}
+
+function renderReview(){
+  document.getElementById('sR').textContent=S.review.length;
+  if(S.review.length>0){
+    document.getElementById('rCard').style.display='block';
+    document.getElementById('rLbl').textContent=`⚠ Review needed — ${S.review.length} photo${S.review.length!==1?'s':''}`;
+    document.getElementById('rGrid').innerHTML=S.review.map((p,i)=>`
+      <div class="pc review">
+        <img class="pt2" src="${p.dataURL}" alt="${esc(p.name)}"/>
+        <div class="pi"><div class="pn" title="${esc(p.name)}">${esc(p.name)}</div>
+        <div class="pa">
+          <button class="pb pb-y" onclick="acceptR(${i})" title="Accept">✓</button>
+          <button class="pb pb-n" onclick="rejectR(${i})" title="Dismiss">✕</button>
+          <button class="pb pb-s" onclick="dlOne(${i},'r')" title="Save">↓</button>
+        </div></div>
+      </div>`).join('');
+    document.getElementById('zipAllBtn').style.display='';
+  } else {
+    document.getElementById('rCard').style.display='none';
+    document.getElementById('zipAllBtn').style.display='none';
+  }
+  document.getElementById('emCard').style.display=(!S.matches.length&&!S.review.length)?'block':'none';
+}
+
+function acceptR(i){
+  const item=S.review.splice(i,1)[0];
+  S.matches.push(item);
+  document.getElementById('sM').textContent=S.matches.length;
+  document.getElementById('mLbl').textContent=`✅ Confirmed — ${S.matches.length} photo${S.matches.length!==1?'s':''}`;
+  const idx=S.matches.length-1;
+  const div=document.createElement('div');div.className='pc match';
+  div.innerHTML=`<img class="pt2" src="${item.dataURL}"/><div class="pi"><div class="pn">${esc(item.name)}</div><div class="pa"><button class="pb pb-s" onclick="dlOne(${idx},'m')">↓ Save</button></div></div>`;
+  document.getElementById('mGrid').appendChild(div);
+  document.getElementById('mCard').style.display='block';
+  document.getElementById('saveBar').style.display='block';
+  renderReview();
+}
+function rejectR(i){S.review.splice(i,1);renderReview();}
+
+/* ═══════════════════════════════════════════
+   SAVE
+═══════════════════════════════════════════ */
+function dlOne(i,p){const x=p==='m'?S.matches[i]:S.review[i];if(!x)return;const a=document.createElement('a');a.href=x.dataURL;a.download=x.name;a.click();}
+
+async function dlZip(all){
+  const photos=all?[...S.matches,...S.review]:[...S.matches];
+  if(!photos.length)return;
+  const btn=document.getElementById(all?'zipAllBtn':'zipBtn');
+  const orig=btn.textContent;btn.disabled=true;btn.textContent='⏳ Packing…';
+  try{
+    const Z=await new Promise((ok,no)=>{if(window.JSZip){ok(window.JSZip);return;}const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=()=>ok(window.JSZip);s.onerror=no;document.head.appendChild(s);});
+    const zip=new Z();const folder=zip.folder('matched_photos');
+    photos.forEach(p=>folder.file(p.name,p.dataURL.split(',')[1],{base64:true}));
+    const blob=await zip.generateAsync({type:'blob'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='matched_photos.zip';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+  }catch(e){sa('ZIP error: '+e.message);}
+  finally{btn.disabled=false;btn.textContent=orig;}
+}
+
+async function saveFolder(){
+  if(!window.showDirectoryPicker){sa('Save to Folder requires Chrome/Edge 86+. Use Download ZIP instead.');return;}
+  if(!S.matches.length)return;
+  try{
+    const dir=await window.showDirectoryPicker();
+    for(const p of S.matches){
+      const b=atob(p.dataURL.split(',')[1]),bytes=new Uint8Array(b.length);
+      for(let i=0;i<b.length;i++)bytes[i]=b.charCodeAt(i);
+      const mime=p.dataURL.match(/data:([^;]+)/)?.[1]||'image/jpeg';
+      const fh=await dir.getFileHandle(p.name,{create:true});
+      const w=await fh.createWritable();
+      await w.write(new Blob([bytes],{type:mime}));await w.close();
+    }
+    sa(`✅ ${S.matches.length} photo${S.matches.length!==1?'s':''} saved to folder!`,'s');
+  }catch(e){if(e.name!=='AbortError')sa('Save error: '+e.message);}
+}
+
+/* ═══════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════ */
+function resetApp(){
+  Object.assign(S,{step:1,refs:[],mode:'local',localFiles:[],driveFiles:[],dKey:'',matches:[],review:[],noCount:0,total:0,stopped:false});
+  refInp.value='';
+  refDrop.className='drop';
+  refDrop.innerHTML='<span class="di">👤</span><div class="dl">Drop reference photo(s) here, or click to browse</div><div class="dh">Add up to 5 photos of the same person for best results</div>';
+  document.getElementById('refGrid').innerHTML='';
+  document.getElementById('step1Btn').classList.add('hidden');
+  fInp.value='';
+  fDrop.className='drop';
+  fDrop.innerHTML='<span class="di">📁</span><div class="dl">Select folder or drag photos here</div><div class="dh">Click to open folder picker</div>';
+  document.getElementById('dUrl').value='';
+  document.getElementById('dKey').value='';
+  document.getElementById('dSt').style.display='none';
+  document.getElementById('scanBtn').classList.add('hidden');
+  setMode('local');
+  goStep(1);
+}
+
+goStep(1);
+</script>
+</body>
+</html>
